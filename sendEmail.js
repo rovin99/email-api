@@ -55,7 +55,7 @@ app.post('/sendEmail', (req, res) => {
   const mailOptions = {
     from: emailFrom,
     to: emailTo,
-    subject: 'Data from Local Server',
+    subject: 'Data from Local Server - ' + Date.now(),
     html: htmlTemplate,
   };
 
