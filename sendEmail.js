@@ -32,6 +32,30 @@ app.post('/sendEmail', (req, res) => {
   // Create an HTML email template with the JSON data in a table format
   const htmlTemplate = `
     <html>
+      <head>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+          }
+          h2 {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          tr:nth-child(even) {
+            background-color: #f2f2f2;
+          }
+        </style>
+      </head>
       <body>
         <h2>Data from Local Server</h2>
         <table>
@@ -51,6 +75,7 @@ app.post('/sendEmail', (req, res) => {
       </body>
     </html>
   `;
+
 
   const mailOptions = {
     from: emailFrom,
