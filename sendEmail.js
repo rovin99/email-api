@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const app = express();
- // Choose a port for your local server
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -13,18 +12,15 @@ const emailFrom = process.env.EMAIL_FROM;
 const emailTo = process.env.EMAIL_TO;
 const corsOrigin = process.env.CORS_ORIGIN;
 
-// Middleware to parse JSON data in POST requests
 app.use(bodyParser.json());
 
 app.use(cors({
   origin: corsOrigin,
 }));
 
-// Handle POST requests
 app.post('/sendEmail', (req, res) => {
-  const dataToSend = req.body; // Received data from the client
+  const dataToSend = req.body;
   
-  // Create a Nodemailer transporter and send an email with the received data
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -33,11 +29,34 @@ app.post('/sendEmail', (req, res) => {
     },
   });
 
+  // Create an HTML email template with the JSON data in a table format
+  const htmlTemplate = `
+    <html>
+      <body>
+        <h2>Data from Local Server</h2>
+        <table>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+          ${Object.entries(dataToSend)
+            .map(([key, value]) => `
+              <tr>
+                <td>${key}</td>
+                <td>${value}</td>
+              </tr>
+            `)
+            .join('')}
+        </table>
+      </body>
+    </html>
+  `;
+
   const mailOptions = {
     from: emailFrom,
     to: emailTo,
-    subject: 'Data from local server',
-    text: JSON.stringify(dataToSend), // Convert the data to a string
+    subject: 'Data from Local Server',
+    html: htmlTemplate,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -51,7 +70,6 @@ app.post('/sendEmail', (req, res) => {
   });
 });
 
-// Start the local server
 app.listen(port, () => {
   console.log(`Local server is running on http://localhost:${port}`);
 });
