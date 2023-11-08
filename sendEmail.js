@@ -14,7 +14,8 @@ const emailTo = process.env.EMAIL_TO;
 const corsOrigin = process.env.CORS_ORIGIN;
 
 app.use(bodyParser.json());
-
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cors({
   origin: corsOrigin,
 }));
