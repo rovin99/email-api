@@ -2,9 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-const app = express();
-const { Readable } = require('stream');
 const multer = require('multer');
+const streamifier = require('streamifier');
+const app = express();
+
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -20,10 +21,30 @@ app.use(cors({
   origin: corsOrigin,
 }));
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
-app.post('/upload', upload.single('image'), (req, res) => {
-  const { email, subject, message } = req.body;
-    const imageBuffer = req.file.buffer;
+const upload = multer({ storage: storage });
+app.post('/sendEmail', (req, res) => {
+
+  upload(req, res, (err) => {
+    if (err) {
+      console.error('Error handling file uploads: ' + err);
+      res.status(500).json({ message: 'File upload failed' });
+      return;
+    }
+
+    const dataToSend = req.body;
+    const attachments = [];
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        attachments.push({
+          filename: file.originalname,
+          content: streamifier.createReadStream(file.buffer),
+        });
+      });
+    }
+
+    // Rest of the sendEmail code remains the same
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -31,138 +52,109 @@ app.post('/upload', upload.single('image'), (req, res) => {
         pass: gmailPass,
       },
     });
-
+  
+    // Create an HTML email template with the JSON data in a table format
+    const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Data from Local Server</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+        }
+    
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+    
+        h1 {
+          background-color: #007BFF;
+          color: #fff;
+          padding: 10px;
+          text-align: center;
+        }
+    
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: #fff;
+        }
+    
+        th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+    
+        th {
+          background-color: #007BFF;
+          color: #fff;
+        }
+    
+        tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+    
+        @media screen and (max-width: 600px) {
+          table {
+            width: 100%;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Data from Local Server</h1>
+        <table>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+          ${Object.entries(dataToSend)
+            .map(([key, value]) => `
+              <tr>
+                <td>${key}</td>
+                <td>${value}</td>
+              </tr>
+            `)
+            .join('')}
+        </table>
+      </div>
+    </body>
+    </html>
+    
+    `;
+  
+  
     const mailOptions = {
       from: emailFrom,
       to: emailTo,
-      subject: subject,
-      text: message,
-      attachments: [
-          {
-              filename: 'uploaded-image.jpg', // Change the filename as needed
-              content: imageBuffer,
-          },
-      ],
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
+      subject: 'Data from Local Server - ' + Date.now(),
+      html: htmlTemplate,
+    };
+  
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
         console.error('Error sending email: ' + error);
-        res.status(500).send('Error sending email');
-    } else {
+        res.status(500).json({ message: 'Email sending failed' });
+      } else {
         console.log('Email sent: ' + info.response);
-        res.send('Email sent successfully');
-    }
-})});
-// app.post('/sendEmail', (req, res) => {
-//   const dataToSend = req.body;
+        res.json({ message: 'Email sent successfully' });
+      }
+    });
+  });
   
-//   const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//       user: gmailUser,
-//       pass: gmailPass,
-//     },
-//   });
-
-//   // Create an HTML email template with the JSON data in a table format
-//   const htmlTemplate = `
-//   <!DOCTYPE html>
-//   <html>
-//   <head>
-//     <meta charset="utf-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1">
-//     <title>Data from Local Server</title>
-//     <style>
-//       body {
-//         font-family: Arial, sans-serif;
-//         background-color: #f4f4f4;
-//         margin: 0;
-//         padding: 0;
-//       }
   
-//       .container {
-//         max-width: 600px;
-//         margin: 0 auto;
-//         padding: 20px;
-//       }
   
-//       h1 {
-//         background-color: #007BFF;
-//         color: #fff;
-//         padding: 10px;
-//         text-align: center;
-//       }
-  
-//       table {
-//         width: 100%;
-//         border-collapse: collapse;
-//         background-color: #fff;
-//       }
-  
-//       th, td {
-//         padding: 8px;
-//         text-align: left;
-//         border-bottom: 1px solid #ddd;
-//       }
-  
-//       th {
-//         background-color: #007BFF;
-//         color: #fff;
-//       }
-  
-//       tr:nth-child(even) {
-//         background-color: #f2f2f2;
-//       }
-  
-//       @media screen and (max-width: 600px) {
-//         table {
-//           width: 100%;
-//         }
-//       }
-//     </style>
-//   </head>
-//   <body>
-//     <div class="container">
-//       <h1>Data from Local Server</h1>
-//       <table>
-//       <tr>
-//         <th>Key</th>
-//         <th>Value</th>
-//       </tr>
-//         ${Object.entries(dataToSend)
-//           .map(([key, value]) => `
-//             <tr>
-//               <td>${key}</td>
-//               <td>${value}</td>
-//             </tr>
-//           `)
-//           .join('')}
-//       </table>
-//     </div>
-//   </body>
-//   </html>
-  
-//   `;
-
-
-//   const mailOptions = {
-//     from: emailFrom,
-//     to: emailTo,
-//     subject: 'Data from Local Server - ' + Date.now(),
-//     html: htmlTemplate,
-//   };
-
-//   transporter.sendMail(mailOptions, (error, info) => {
-//     if (error) {
-//       console.error('Error sending email: ' + error);
-//       res.status(500).json({ message: 'Email sending failed' });
-//     } else {
-//       console.log('Email sent: ' + info.response);
-//       res.json({ message: 'Email sent successfully' });
-//     }
-//   });
-// });
+});
 
 app.listen(port, () => {
   console.log(`Local server is running on http://localhost:${port}`);
