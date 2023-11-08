@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const app = express();
+const fs = require('fs'); 
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -17,116 +18,117 @@ app.use(bodyParser.json());
 app.use(cors({
   origin: corsOrigin,
 }));
+const uploadDirectory = './uploads';
+
+// Create the uploads directory if it doesn't exist
+if (!fs.existsSync(uploadDirectory)) {
+  fs.mkdirSync(uploadDirectory);
+}
+
+// Middleware for serving uploaded files
+app.use('/uploads', express.static('uploads'));
+
 
 app.post('/sendEmail', (req, res) => {
   const dataToSend = req.body;
-  
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: gmailUser,
-      pass: gmailPass,
-    },
-  });
 
-  // Create an HTML email template with the JSON data in a table format
-  const htmlTemplate = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Data from Local Server</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-      }
-  
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-  
-      h1 {
-        background-color: #007BFF;
-        color: #fff;
-        padding: 10px;
-        text-align: center;
-      }
-  
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: #fff;
-      }
-  
-      th, td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-  
-      th {
-        background-color: #007BFF;
-        color: #fff;
-      }
-  
-      tr:nth-child(even) {
-        background-color: #f2f2f2;
-      }
-  
-      @media screen and (max-width: 600px) {
-        table {
-          width: 100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Data from Local Server</h1>
-      <table>
-      <tr>
-        <th>Key</th>
-        <th>Value</th>
-      </tr>
-        ${Object.entries(dataToSend)
-          .map(([key, value]) => `
-            <tr>
-              <td>${key}</td>
-              <td>${value}</td>
-            </tr>
-          `)
-          .join('')}
-      </table>
-    </div>
-  </body>
-  </html>
-  
-  `;
+  // Check if there are files uploaded
+  if (req.files && req.files.length > 0) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPass,
+      },
+    });
 
+    // Create an array to store file paths
+    const filePaths = [];
 
-  const mailOptions = {
-    from: emailFrom,
-    to: emailTo,
-    subject: 'Data from Local Server - ' + Date.now(),
-    html: htmlTemplate,
-  };
+    // Move uploaded files to the 'uploads' directory
+    req.files.forEach((file, index) => {
+      const filePath = `${uploadDirectory}/${file.originalname}`;
+      fs.writeFileSync(filePath, file.buffer);
+      filePaths.push(filePath);
+    });
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending email: ' + error);
-      res.status(500).json({ message: 'Email sending failed' });
-    } else {
-      console.log('Email sent: ' + info.response);
-      res.json({ message: 'Email sent successfully' });
-    }
-  });
+    // Create download links for the uploaded files
+    const downloadLinks = filePaths.map((filePath) => {
+      return `${req.protocol}://${req.get('host')}/${filePath}`;
+    });
+
+    // Create an HTML email template with download links
+    const htmlTemplate = `
+      <!-- ... Your email template ... -->
+      <p>Uploaded Files:</p>
+      <ul>
+        ${downloadLinks.map((link) => `<li><a href="${link}" target="_blank" download>Download</a></li>`).join('')}
+      </ul>
+      <!-- ... Your email template ... -->
+    `;
+
+    const mailOptions = {
+      from: emailFrom,
+      to: emailTo,
+      subject: 'Data from Local Server - ' + Date.now(),
+      html: htmlTemplate,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email: ' + error);
+        res.status(500).json({ message: 'Email sending failed' });
+      } else {
+        console.log('Email sent: ' + info.response);
+        res.json({ message: 'Email sent successfully' });
+      }
+    });
+  } else {
+    // No files were uploaded, so you can send the email without download links
+    sendEmailWithoutAttachments(dataToSend)
+      .then(() => {
+        res.json({ message: 'Email sent successfully' });
+      })
+      .catch((error) => {
+        console.error('Error sending email: ' + error);
+        res.status(500).json({ message: 'Email sending failed' });
+      });
+  }
 });
+
+function sendEmailWithoutAttachments(dataToSend) {
+  return new Promise((resolve, reject) => {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPass,
+      },
+    });
+
+    // Create an HTML email template without download links
+    const htmlTemplate = `
+      <!-- ... Your email template ... -->
+      <p>No files were uploaded.</p>
+      <!-- ... Your email template ... -->
+    `;
+
+    const mailOptions = {
+      from: emailFrom,
+      to: emailTo,
+      subject: 'Data from Local Server - ' + Date.now(),
+      html: htmlTemplate,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 app.listen(port, () => {
   console.log(`Local server is running on http://localhost:${port}`);
