@@ -90,11 +90,18 @@ app.post('/sendEmail', (req, res) => {
     <div class="container">
       <h1>Data from Local Server</h1>
       <table>
-        <tr>
-          <th>Key</th>
-          <th>Value</th>
-        </tr>
-        {{tableRows}}
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
+        ${Object.entries(dataToSend)
+          .map(([key, value]) => `
+            <tr>
+              <td>${key}</td>
+              <td>${value}</td>
+            </tr>
+          `)
+          .join('')}
       </table>
     </div>
   </body>
