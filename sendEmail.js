@@ -2,9 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-
+const multer = require('multer'); // Add multer
 const app = express();
-
+const fs = require('fs');
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -19,10 +19,12 @@ app.use(bodyParser.json());
 app.use(cors({
   origin: corsOrigin,
 }));
-
-app.post('/sendEmail', (req, res) => {
-  const dataToSend = req.body;
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+app.post('/sendEmail',upload.array('imageUpload', 5), (req, res) => {
   
+  const dataToSend = req.body;
+  const images = req.files; 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -30,7 +32,13 @@ app.post('/sendEmail', (req, res) => {
       pass: gmailPass,
     },
   });
-
+  images.forEach((image, index) => {
+    const fileName = `image_${index + 1}.png`; // You can choose the file name as per your preference
+    mailOptions.attachments.push({
+      filename: fileName,
+      content: image.buffer, // Buffer containing the image data
+    });
+  });
   // Create an HTML email template with the JSON data in a table format
   const htmlTemplate = `
   <!DOCTYPE html>
