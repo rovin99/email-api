@@ -118,6 +118,15 @@ app.post('/sendEmail', (req, res) => {
     html: htmlTemplate,
   };
 
+  if (dataToSend.uploadedImages && dataToSend.uploadedImages.length > 0) {
+    dataToSend.uploadedImages.forEach((image) => {
+        mailOptions.attachments.push({
+            filename: image.name,
+            content: fs.createReadStream(image.path),
+        });
+    });
+  }
+
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email: ' + error);
