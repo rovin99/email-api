@@ -44,7 +44,52 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Data from Local Server</title>
     <style>
-      /* ... (same as your previous styles) */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+  
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+  
+      h1 {
+        background-color: #007BFF;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+      }
+  
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+      }
+  
+      th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+  
+      th {
+        background-color: #007BFF;
+        color: #fff;
+      }
+  
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+  
+      @media screen and (max-width: 600px) {
+        table {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
