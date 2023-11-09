@@ -27,7 +27,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataToSend = req.body;
   const images = req.files;
   const latestValues = JSON.parse(dataToSend.latestValues);
-  const selectedTimes=JSON.parse(dataToSend.selectedTimes);
+  const selectedTimes=JSON.parse(dataToSend.selectedTimes) || [];
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
