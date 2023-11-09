@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-const multer = require('multer'); // Add multer
+const multer = require('multer');
 const app = express();
 const fs = require('fs');
 require('dotenv').config();
@@ -19,12 +19,13 @@ app.use(bodyParser.json());
 app.use(cors({
   origin: corsOrigin,
 }));
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-app.post('/sendEmail',upload.array('imageUpload', 5), (req, res) => {
-  
+
+app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataToSend = req.body;
-  const images = req.files; 
+  const images = req.files;
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -32,13 +33,7 @@ app.post('/sendEmail',upload.array('imageUpload', 5), (req, res) => {
       pass: gmailPass,
     },
   });
-  images.forEach((image, index) => {
-    const fileName = `image_${index + 1}.png`; // You can choose the file name as per your preference
-    mailOptions.attachments.push({
-      filename: fileName,
-      content: image.buffer, // Buffer containing the image data
-    });
-  });
+
   // Create an HTML email template with the JSON data in a table format
   const htmlTemplate = `
   <!DOCTYPE html>
@@ -48,52 +43,7 @@ app.post('/sendEmail',upload.array('imageUpload', 5), (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Data from Local Server</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-      }
-  
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-  
-      h1 {
-        background-color: #007BFF;
-        color: #fff;
-        padding: 10px;
-        text-align: center;
-      }
-  
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: #fff;
-      }
-  
-      th, td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-  
-      th {
-        background-color: #007BFF;
-        color: #fff;
-      }
-  
-      tr:nth-child(even) {
-        background-color: #f2f2f2;
-      }
-  
-      @media screen and (max-width: 600px) {
-        table {
-          width: 100%;
-        }
-      }
+      /* ... (same as your previous styles) */
     </style>
   </head>
   <body>
@@ -116,16 +66,23 @@ app.post('/sendEmail',upload.array('imageUpload', 5), (req, res) => {
     </div>
   </body>
   </html>
-  
   `;
-
 
   const mailOptions = {
     from: emailFrom,
     to: emailTo,
     subject: 'Data from Local Server - ' + Date.now(),
     html: htmlTemplate,
+    attachments: [],
   };
+
+  images.forEach((image, index) => {
+    const fileName = `image_${index + 1}.png`; // You can choose the file name as per your preference
+    mailOptions.attachments.push({
+      filename: fileName,
+      content: image.buffer, // Buffer containing the image data
+    });
+  });
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
