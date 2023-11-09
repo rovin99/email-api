@@ -27,6 +27,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataToSend = req.body;
   const images = req.files;
   const latestValues = JSON.parse(dataToSend.latestValues);
+  const selectedTimes=JSON.parse(dataToSend.selectedTimes);
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -101,6 +102,20 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
         <th>Value</th>
       </tr>
         ${Object.entries(latestValues)
+          .map(([key, value]) => `
+            <tr>
+              <td>${key}</td>
+              <td>${value}</td>
+            </tr>
+          `)
+          .join('')}
+      </table>
+      <table>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
+        ${Object.entries(selectedTimes)
           .map(([key, value]) => `
             <tr>
               <td>${key}</td>
