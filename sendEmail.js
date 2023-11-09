@@ -2,8 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const multer = require('multer');
 const app = express();
-const fs = require('fs'); 
+const fs = require('fs');
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -19,9 +20,12 @@ app.use(cors({
   origin: corsOrigin,
 }));
 
-app.post('/sendEmail', (req, res) => {
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataToSend = req.body;
-  
+  const images = req.files;
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -39,52 +43,7 @@ app.post('/sendEmail', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Data from Local Server</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-      }
-  
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-  
-      h1 {
-        background-color: #007BFF;
-        color: #fff;
-        padding: 10px;
-        text-align: center;
-      }
-  
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: #fff;
-      }
-  
-      th, td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-  
-      th {
-        background-color: #007BFF;
-        color: #fff;
-      }
-  
-      tr:nth-child(even) {
-        background-color: #f2f2f2;
-      }
-  
-      @media screen and (max-width: 600px) {
-        table {
-          width: 100%;
-        }
-      }
+      /* ... (same as your previous styles) */
     </style>
   </head>
   <body>
@@ -107,25 +66,23 @@ app.post('/sendEmail', (req, res) => {
     </div>
   </body>
   </html>
-  
   `;
-
 
   const mailOptions = {
     from: emailFrom,
     to: emailTo,
     subject: 'Data from Local Server - ' + Date.now(),
     html: htmlTemplate,
+    attachments: [],
   };
 
-  if (dataToSend.uploadedImages && dataToSend.uploadedImages.length > 0) {
-    dataToSend.uploadedImages.forEach((image) => {
-        mailOptions.attachments.push({
-            filename: image.name,
-            content: fs.createReadStream(image.path),
-        });
+  images.forEach((image, index) => {
+    const fileName = `image_${index + 1}.png`; // You can choose the file name as per your preference
+    mailOptions.attachments.push({
+      filename: fileName,
+      content: image.buffer, // Buffer containing the image data
     });
-  }
+  });
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -140,4 +97,4 @@ app.post('/sendEmail', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Local server is running on http://localhost:${port}`);
-}); 
+});
