@@ -26,7 +26,7 @@ const upload = multer({ storage: storage });
 app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataFromForm = req.body; // Contains form data
   const images = req.files; // Contains uploaded images
-  const selectedTimes = dataFromForm.selectedTimes; // Contains selected time slots
+  const selectedTimes = dataFromForm.selectedTimes||[]; // Contains selected time slots
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
