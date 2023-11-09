@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 const app = express();
 const fs = require('fs'); 
+const multer = require('multer');
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -19,9 +20,13 @@ app.use(cors({
   origin: corsOrigin,
 }));
 
-app.post('/sendEmail', (req, res) => {
+const storage = multer.memoryStorage(); // You can change this to save files to disk or S3
+const upload = multer({ storage: storage });
+
+app.post('/sendEmail', upload.array('images'),(req, res) => {
   const dataToSend = req.body;
-  
+  const images = req.files;
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -117,7 +122,14 @@ app.post('/sendEmail', (req, res) => {
     subject: 'Data from Local Server - ' + Date.now(),
     html: htmlTemplate,
   };
-
+  if (images && images.length > 0) {
+    images.forEach((image) => {
+      mailOptions.attachments.push({
+        filename: image.originalname,
+        content: image.buffer,
+      });
+    });
+  }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email: ' + error);
