@@ -23,10 +23,10 @@ app.use(cors({
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
+app.post('/sendEmail', upload.array('uploadedImages', 5), (req, res) => {
   const dataFromForm = req.body; // Contains form data
   const images = req.files; // Contains uploaded images
-  const selectedTimes = dataFromForm.selectedTimes||[]; // Contains selected time slots
+  // Contains selected time slots
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -65,14 +65,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
             `)
             .join('')}
         </table>
-        <h2>Selected Times</h2>
-        <ul>
-          ${selectedTimes
-            .map(time => `
-              <li>${time.day} - ${time.time}</li>
-            `)
-            .join('')}
-        </ul>
+        
       </div>
     </body>
     </html>
@@ -85,8 +78,8 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
     html: htmlTemplate,
     attachments: [],
   };
-  if (images && images.length > 0) {
 
+  if (images && images.length > 0) {
     images.forEach((image, index) => {
       const fileName = `image_${index + 1}.png`;
       mailOptions.attachments.push({
@@ -94,7 +87,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
         content: image.buffer,
       });
     });
-   }
+  }
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
