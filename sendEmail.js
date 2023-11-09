@@ -24,10 +24,9 @@ const storage = multer.memoryStorage(); // You can change this to save files to 
 const upload = multer({ storage: storage });
 
 app.post('/sendEmail', upload.array('images'),(req, res) => {
-  const formData = req.body;
+  const dataToSend = JSON.parse(req.body.Data);
   const images = req.files;
-  const latestValues = JSON.parse(formData.latestValues);
-
+  
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -101,7 +100,7 @@ app.post('/sendEmail', upload.array('images'),(req, res) => {
         <th>Key</th>
         <th>Value</th>
       </tr>
-        ${Object.entries(latestValues)
+        ${Object.entries(dataToSend)
           .map(([key, value]) => `
             <tr>
               <td>${key}</td>
