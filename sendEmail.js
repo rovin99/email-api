@@ -112,18 +112,18 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
       </table>
       <table>
       <tr>
-        <th>Key</th>
-        <th>Value</th>
+        <th>Day</th>
+        <th>Time</th>
       </tr>
-        ${Object.entries(selectedTimes)
-          .map(([key, value]) => `
-            <tr>
-              <td>${key}</td>
-              <td>${value}</td>
-            </tr>
-          `)
-          .join('')}
-      </table>
+      ${selectedTimes
+        .map(item => `
+          <tr>
+            <td>${item.day}</td>
+            <td>${item.time}</td>
+          </tr>
+        `)
+        .join('')}
+    </table>
     </div>
   </body>
   </html>
