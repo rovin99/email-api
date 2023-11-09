@@ -85,14 +85,16 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
     html: htmlTemplate,
     attachments: [],
   };
+  if (images && images.length > 0) {
 
-  images.forEach((image, index) => {
-    const fileName = `image_${index + 1}.png`;
-    mailOptions.attachments.push({
-      filename: fileName,
-      content: image.buffer,
+    images.forEach((image, index) => {
+      const fileName = `image_${index + 1}.png`;
+      mailOptions.attachments.push({
+        filename: fileName,
+        content: image.buffer,
+      });
     });
-  });
+   }
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
