@@ -29,9 +29,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const latestValues = JSON.parse(dataToSend.latestValues);
   const selectedTimes=JSON.parse(dataToSend.selectedTimes) || [];
   const transporter = nodemailer.createTransport({
-    host: 'websmtp.simply.com',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
       user: gmailUser,
       pass: gmailPass,
