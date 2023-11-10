@@ -132,7 +132,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const mailOptions = {
     from: emailFrom,
     to: emailTo,
-    subject: 'Data from Local Server - ' + Date.now(),
+    subject: 'New Registration From vonsol.dk',
     html: htmlTemplate,
     attachments: [],
   };
