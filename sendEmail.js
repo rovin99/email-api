@@ -26,6 +26,7 @@ const upload = multer({ storage: storage });
 app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   const dataToSend = req.body;
   const images = req.files;
+  console.log('dataToSend.latestValues:', dataToSend.latestValues);
   const latestValues = JSON.parse(dataToSend.latestValues);
   const selectedTimes=JSON.parse(dataToSend.selectedTimes) || [];
   const transporter = nodemailer.createTransport({
