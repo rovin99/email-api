@@ -39,14 +39,14 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   // Create an HTML email template with the JSON data in a table format
   const htmlTemplate = `
   <!DOCTYPE html>
-  <html lang="en">
+  <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Data from Local Server</title>
     <style>
       body {
-        font-family: 'Arial', sans-serif;
+        font-family: Arial, sans-serif;
         background-color: #f4f4f4;
         margin: 0;
         padding: 0;
@@ -56,9 +56,6 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
         max-width: 600px;
         margin: 0 auto;
         padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #fff;
       }
   
       h1 {
@@ -66,18 +63,16 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
         color: #fff;
         padding: 10px;
         text-align: center;
-        margin-top: 0;
-        border-radius: 8px 8px 0 0;
       }
   
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 15px;
+        background-color: #fff;
       }
   
       th, td {
-        padding: 12px;
+        padding: 8px;
         text-align: left;
         border-bottom: 1px solid #ddd;
       }
@@ -88,7 +83,7 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
       }
   
       tr:nth-child(even) {
-        background-color: #f9f9f9;
+        background-color: #f2f2f2;
       }
   
       @media screen and (max-width: 600px) {
@@ -100,9 +95,12 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   </head>
   <body>
     <div class="container">
-      <h1>Form Details</h1>
+      <h1>Data from Local Server</h1>
       <table>
-       
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
         ${Object.entries(latestValues)
           .map(([key, value]) => `
             <tr>
@@ -112,27 +110,23 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
           `)
           .join('')}
       </table>
-  
-      ${selectedTimes.length > 0 ? `
-        <table>
+      <table>
+      <tr>
+        <th>Day</th>
+        <th>Time</th>
+      </tr>
+      ${selectedTimes
+        .map(item => `
           <tr>
-            <th>Day</th>
-            <th>Time</th>
+            <td>${item.day}</td>
+            <td>${item.time}</td>
           </tr>
-          ${selectedTimes
-            .map(item => `
-              <tr>
-                <td>${item.day}</td>
-                <td>${item.time}</td>
-              </tr>
-            `)
-            .join('')}
-        </table>
-      ` : ''}
+        `)
+        .join('')}
+    </table>
     </div>
   </body>
   </html>
-  
   `;
 
   const mailOptions = {
