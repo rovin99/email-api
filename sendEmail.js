@@ -39,94 +39,98 @@ app.post('/sendEmail', upload.array('imageUpload', 5), (req, res) => {
   // Create an HTML email template with the JSON data in a table format
   const htmlTemplate = `
   <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Data from Local Server</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-      }
-  
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-  
-      h1 {
-        background-color: #007BFF;
-        color: #fff;
-        padding: 10px;
-        text-align: center;
-      }
-  
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data from Local Server</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007BFF;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    @media screen and (max-width: 600px) {
       table {
         width: 100%;
-        border-collapse: collapse;
-        background-color: #fff;
       }
-  
-      th, td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-  
-      th {
-        background-color: #007BFF;
-        color: #fff;
-      }
-  
-      tr:nth-child(even) {
-        background-color: #f2f2f2;
-      }
-  
-      @media screen and (max-width: 600px) {
-        table {
-          width: 100%;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Data from Local Server</h1>
-      <table>
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Data from Local Server</h1>
+    <table>
       <tr>
         <th>Key</th>
         <th>Value</th>
       </tr>
-        ${Object.entries(latestValues)
-          .map(([key, value]) => `
-            <tr>
-              <td>${key}</td>
-              <td>${value}</td>
-            </tr>
-          `)
-          .join('')}
-      </table>
-      <table>
-      <tr>
-        <th>Day</th>
-        <th>Time</th>
-      </tr>
-      ${selectedTimes
-        .map(item => `
+      ${Object.entries(latestValues)
+        .map(([key, value]) => `
           <tr>
-            <td>${item.day}</td>
-            <td>${item.time}</td>
+            <td>${key}</td>
+            <td>${value}</td>
           </tr>
         `)
         .join('')}
     </table>
-    </div>
-  </body>
-  </html>
+
+    ${selectedTimes.length > 0 ? `
+      <table>
+        <tr>
+          <th>Day</th>
+          <th>Time</th>
+        </tr>
+        ${selectedTimes
+          .map(item => `
+            <tr>
+              <td>${item.day}</td>
+              <td>${item.time}</td>
+            </tr>
+          `)
+          .join('')}
+      </table>
+    ` : ''}
+  </div>
+</body>
+</html>
+
   `;
 
   const mailOptions = {
